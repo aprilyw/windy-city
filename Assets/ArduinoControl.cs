@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO.Ports;
+using System.IO;
 
 public class ArduinoControl : MonoBehaviour
 {
@@ -28,13 +29,18 @@ public class ArduinoControl : MonoBehaviour
   SerialPort interfaceStream;
   public string interfacePath = "/dev/tty.usbserial-1410";
   public int baudRate = 9600;
-
+  public int speed = 0;
   public bool fanOn;
 
   void Start()
   {
     fanOn = false;
     Debug.Log("start");
+    // Read
+    StreamReader reader = new StreamReader("Assets/Text/speedlog.txt");
+    string speedString = reader.ReadLine();
+    reader.Close();
+    speed = int.Parse(speedString);
     try
     {
       interfaceStream = new SerialPort(interfacePath, baudRate);
@@ -50,12 +56,12 @@ public class ArduinoControl : MonoBehaviour
   }
 
   void Update () {
-    if (interfaceStream.IsOpen) {
+    if (interfaceStream != null && interfaceStream.IsOpen) {
       if (Input.GetKey (KeyCode.RightArrow)) {
         try
         {
           Debug.Log("Turning right");
-          WriteToArduino("0");
+          WriteToArduino("" + Math.Abs(speed));
         }
         catch (TimeoutException e)
         {
@@ -65,7 +71,7 @@ public class ArduinoControl : MonoBehaviour
           try
           {
             Debug.Log("Turning left");
-            WriteToArduino("1");
+            WriteToArduino("" + (60 + Math.Abs(speed)));
           }
           catch (TimeoutException e)
           {

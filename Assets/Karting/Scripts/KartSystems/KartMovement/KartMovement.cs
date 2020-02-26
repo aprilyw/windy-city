@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using KartGame.Track;
 using UnityEngine;
@@ -134,7 +135,7 @@ namespace KartGame.KartSystems
         {
             if(Mathf.Approximately (Time.timeScale, 0f))
                 return;
-            
+
             if (m_RepositionPositionDelta.sqrMagnitude > float.Epsilon || m_RepositionRotationDelta != Quaternion.identity)
             {
                 m_Rigidbody.MovePosition (m_Rigidbody.position + m_RepositionPositionDelta);
@@ -143,7 +144,7 @@ namespace KartGame.KartSystems
                 m_RepositionRotationDelta = Quaternion.identity;
                 return;
             }
-            
+
             m_RigidbodyPosition = m_Rigidbody.position;
 
             KartStats.GetModifiedStats (m_CurrentModifiers, defaultStats, ref m_ModifiedStats);
@@ -152,9 +153,9 @@ namespace KartGame.KartSystems
             Quaternion rotationStream = m_Rigidbody.rotation;
 
             float deltaTime = Time.deltaTime;
-            
+
             m_CurrentGroundInfo = CheckForGround (deltaTime, rotationStream, Vector3.zero);
-            
+
             Hop (rotationStream, m_CurrentGroundInfo);
 
             if (m_CurrentGroundInfo.isGrounded && !m_IsGrounded)
@@ -168,7 +169,6 @@ namespace KartGame.KartSystems
             ApplyAirborneModifier (m_CurrentGroundInfo);
 
             GroundInfo nextGroundInfo = CheckForGround (deltaTime, rotationStream, m_Velocity * deltaTime);
-
             GroundNormal (deltaTime, ref rotationStream, m_CurrentGroundInfo, nextGroundInfo);
             TurnKart (deltaTime, ref rotationStream);
 
@@ -176,14 +176,20 @@ namespace KartGame.KartSystems
             StopDrift (deltaTime);
 
             CalculateDrivingVelocity (deltaTime, m_CurrentGroundInfo, rotationStream);
+            string serializedData = "" + m_Velocity[2];
+            // Write to disk
+            FileStream stream = new FileStream("Assets/Text/speedlog.txt", FileMode.Truncate);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine(serializedData);
+            writer.Close();
 
             Vector3 penetrationOffset = SolvePenetration (rotationStream);
             penetrationOffset = ProcessVelocityCollisions (deltaTime, rotationStream, penetrationOffset);
 
             rotationStream = Quaternion.RotateTowards (m_Rigidbody.rotation, rotationStream, rotationCorrectionSpeed * deltaTime);
-            
+
             AdjustVelocityByPenetrationOffset (deltaTime, ref penetrationOffset);
-            
+
             m_Rigidbody.MoveRotation (rotationStream);
             m_Rigidbody.MovePosition (m_RigidbodyPosition + m_Movement);
         }
@@ -464,7 +470,7 @@ namespace KartGame.KartSystems
                 localVelocity.y = Mathf.Max (0f, localVelocity.y);
 
             m_Velocity = m_DriftOffset * rotationStream * localVelocity;
-            
+
             if (!groundInfo.isCapsuleTouching)
                 m_Velocity += Vector3.down * m_ModifiedStats.gravity * deltaTime;
         }
@@ -556,12 +562,12 @@ namespace KartGame.KartSystems
                 if (Mathf.Approximately (m_RaycastHitBuffer[i].distance, 0f))
                     if (Physics.Raycast (m_RigidbodyPosition, rotationStream * Vector3.down, out RaycastHit hit, rayLength + 0.5f, allCollidingLayers, QueryTriggerInteraction.Collide))
                         m_RaycastHitBuffer[i] = hit;
-                
+
                 if (kartCollider != null)
                 {
                     m_Velocity = kartCollider.ModifyVelocity (this, m_RaycastHitBuffer[i]);
 
-                    if (Mathf.Abs(Vector3.Dot(m_RaycastHitBuffer[i].normal, Vector3.up)) <= .2f){ 
+                    if (Mathf.Abs(Vector3.Dot(m_RaycastHitBuffer[i].normal, Vector3.up)) <= .2f){
                         OnKartCollision.Invoke ();
                     }
                 }
@@ -601,7 +607,7 @@ namespace KartGame.KartSystems
                     penetrationOffset = Vector3.zero;
                 }
             }
-            
+
             m_Movement = m_Velocity * deltaTime + penetrationOffset;
         }
 
@@ -659,7 +665,7 @@ namespace KartGame.KartSystems
         }
 
         /// <summary>
-        /// This exists as part of the IMovable interface.  Typically it is called by the TrackManager to determine whether control should be re-enabled after a reposition. 
+        /// This exists as part of the IMovable interface.  Typically it is called by the TrackManager to determine whether control should be re-enabled after a reposition.
         /// </summary>
         /// <returns></returns>
         public bool IsControlled ()

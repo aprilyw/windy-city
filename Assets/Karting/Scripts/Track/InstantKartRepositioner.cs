@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using KartGame.KartSystems;
 using UnityEngine;
+using System.IO;
 
 namespace KartGame.Track
 {
@@ -23,9 +24,9 @@ namespace KartGame.Track
 
             Vector3 kartToResetPosition = lastCheckpoint.ResetPosition - kartInfo.Position;
             Quaternion kartToResetRotation = lastCheckpoint.ResetRotation * Quaternion.Inverse (kartInfo.Rotation);
-            
+
             movable.ForceMove (kartToResetPosition, kartToResetRotation);
-            
+
             RepositionComplete (movable, isControlled);
         }
     }
