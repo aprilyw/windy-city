@@ -6,8 +6,27 @@ using System.IO.Ports;
 
 public class ArduinoControl : MonoBehaviour
 {
+  /*public string portName;
+  SerialPort arduino;
+
+  void Start () {
+    arduino = new SerialPort (portName, 9600);
+    arduino.Open ();
+  }
+
+  void Update () {
+    if (arduino.IsOpen) {
+      if (Input.GetKey ("26")) {
+        arduino.Write ("1");
+        Debug.Log (1);
+      } else if (Input.GetKey ("27")) {
+        arduino.Write ("0");
+        Debug.Log (0);
+      }
+    }
+  }*/
   SerialPort interfaceStream;
-  public string interfacePath = "COM9";
+  public string interfacePath = "/dev/tty.usbserial-1410";
   public int baudRate = 9600;
 
   public bool fanOn;
